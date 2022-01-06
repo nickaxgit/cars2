@@ -7,10 +7,18 @@ class Car{
     picture:string=""
     price:number=0
     colour:string=""
-    mileage:number=0
-    
-}
+    mileage:number=0    
 
+    constructor(make:string,model:string,picture:string,price:number,colour:string,mileage:number){
+        this.make=make
+        this.model=model
+        this.picture=picture
+        this.price=price
+        this.colour=colour
+        this.mileage=mileage
+    }
+
+}
 
 let makes:any ={}
 
@@ -21,7 +29,10 @@ makes.Vauxhall="Corsa,Insignia,Movano,Astra,Senator".split(",")
 makes.Toyota="Yaris,Celica,MR2,Avensis,Rav4".split(",")
 makes.Nissan="Leaf,Primera,Juke,Micra".split(",")
 
+
+
 let cars:Car[]=[]
+
 
 //localStorage.removeItem("cars")
 
@@ -31,18 +42,20 @@ if (cars==null){
     saveCars()
 }
 
+cars.push (new Car("Ford","C-max","",1000,"Blue",87500))
 
-cars.sort((a,b)=>a.price-b.price) 
 
-//shiny new way
-cars=cars.filter(c=>c.colour=="red")
+//cars.sort((a,b)=>a.price-b.price) 
+
+let whichColour=$("whichColour") //grabs the dropdown box
+whichColour.addEventListener("change",filterByColour)
 
 
 let holder:HTMLElement = document.getElementById("holder")!
 let saveButton=document.getElementById("save")
 saveButton!.addEventListener("click", addCar )
 
-renderCars()
+renderCars(cars)
 
 function saveCars(){
 
@@ -57,40 +70,41 @@ function saveCars(){
 
 }
 
-function renderCars(){
+function renderCars(results:Car[]){
 
     holder.innerHTML=''
-    for (let i=0;i<cars.length;i++){
+    for (let i=0;i<results.length;i++){
+        
         let card = document.createElement("div")
         card.classList.add("card")        
         holder.appendChild(card)
 
         let heading= document.createElement("h1")
-        heading.innerHTML= cars[i].make + " " + cars[i].model
+        heading.innerHTML= results[i].make + " " + results[i].model
         card.appendChild(heading)
 
         let picture=document.createElement("img")
-        picture.src= cars[i].picture
+        picture.src= results[i].picture
         card.appendChild(picture)
         picture.style.width="80%"
 
         let price= document.createElement("p")
-        price.innerHTML= "£" + cars[i].price
+        price.innerHTML= "£" + results[i].price
         card.appendChild(price) 
         
         let mileage= document.createElement("p")
-        mileage.innerHTML= cars[i].mileage + " miles"
+        mileage.innerHTML= results[i].mileage + " miles"
         card.appendChild(mileage) 
         
         let color=document.createElement("div")
         color.classList.add("colorSquare")
         card.appendChild(color)
-        color.style.backgroundColor=cars[i].colour
+        color.style.backgroundColor=results[i].colour
     }
 }
 
 function $(id:string):HTMLElement{
-    let e=document.getElementById(id)
+    let e=document.getElementById(id) //QuerySelector / QuerySelectorAll
     if (e==null){
         alert (`No such element ${id}`)
     }    
@@ -106,16 +120,17 @@ function addCar(){
     let mileage=parseInt((<HTMLInputElement>$("mileage")).value)
 
     
-    cars.push(<Car>{make:make,model:model,price:price,colour:colour})      
+    cars.push(<Car>{make:make,model:model,price:price,colour:colour,picture:randomPic()})      
 
-    renderCars()
+    renderCars(cars)
     saveCars()
 
 }
 
-function generateRandomCars(makes:any,numCars:number){
 
-    let colours="red,orange,yellow,green,blue,violet,black,white,gray".split(",")
+function randomPic():string{
+
+    //returns a random car image URL
     let pics=[]
     pics.push("https://cdn.tradecentregroup.io/image/upload/q_auto/f_auto/w_400/web/Group/cars/seat/ibiza.png")
     pics.push("https://cdn.tradecentregroup.io/image/upload/q_auto/f_auto/w_400/web/Group/cars/peugeot/108.png")
@@ -124,11 +139,20 @@ function generateRandomCars(makes:any,numCars:number){
     pics.push("https://cdn.tradecentregroup.io/image/upload/q_auto/f_auto/w_400/web/Group/cars/bmw/1-series.png")
     pics.push("https://cdn.tradecentregroup.io/image/upload/q_auto/f_auto/w_400/web/Group/cars/nissan/qashqai.png")
 
+    return pickFrom(pics)
+
+}
+
+
+function generateRandomCars(makes:any,numCars:number){
+
+    let colours="red,orange,yellow,green,blue,violet,black,white,gray".split(",")
+
     let cars=[]
     for(let i=0;i<numCars;i++){
         let make=pickFrom(Object.keys(makes))  //Pick a manufacturer from the makes object
         let model = pickFrom(makes[make])
-        cars.push({make:make,model:model,price:randomInteger(1000)*10,mileage:randomInteger(200000),colour:pickFrom(colours),picture:pickFrom(pics)})    
+        cars.push({make:make,model:model,price:randomInteger(1000)*10,mileage:randomInteger(200000),colour:pickFrom(colours),picture:randomPic()})    
     }
 
     return cars  //send back the 'complete' list of cars
@@ -146,3 +170,11 @@ function randomInteger(max:number){  //Returns a number between 1 and max (inclu
     return Math.floor(Math.random() * max) +1
 }
 
+function filterByColour(){
+
+    //grab the value of the dropdown
+    let filteredCars = cars.filter((c)=>c.colour==(<HTMLSelectElement>$('whichColour')).value)
+
+    renderCars(filteredCars)
+
+}
